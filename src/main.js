@@ -19,23 +19,39 @@ class App {
         event.preventDefault();
 
         const repoInput = this.inputElement.value;
-        console.log(repoInput)
+        
         if(repoInput.length === 0)
-            return;
+            return false;
+        this.setLoad();
+        try{
+            const response = await api.get(`/repos/${repoInput}`);
+            
+            const {name, description, html_url, owner: {avatar_url}} = response.data;
 
-        const response = await api.get(`/repos/${repoInput}`);
+            this.repositories.push({
+                name,
+                description,
+                avatar_url,
+                html_url
+            });
 
-        console.log(response);
-        const {name, description, link_url, owner: {avatar_url}} = response.data;
+            this.inputElement.value = '';
+            this.render();
+        } catch(err){
+            alert('Repositório não encontrado!');
+        }
+        this.setLoad(false);
+    }
 
-        this.repositories.push({
-            name,
-            description,
-            avatar_url,
-            link_url
-        });
-        this.inputElement.value = '';
-        this.render();
+    setLoad(value = true){
+        if(value === true){
+            let spanEl = document.createElement('span');
+            spanEl.setAttribute('id', 'loading');
+            spanEl.appendChild(document.createTextNode('Carregando...'));
+            this.ulElement.appendChild(spanEl);
+        } else {
+            document.getElementById('loading').remove();
+        }
     }
 
     render(){
@@ -49,7 +65,7 @@ class App {
 
             let aEl = document.createElement('a');
             aEl.setAttribute('target', '_blank');
-            aEl.setAttribute('href', repo.link_url);
+            aEl.setAttribute('href', repo.html_url);
             aEl.appendChild(document.createTextNode('Acessar'));
 
             let strongEl = document.createElement('strong');
